@@ -1,5 +1,5 @@
 # GroupRegNet
-Implementation of GroupRegNet: A Groupwise One-shot Deep Learning-based 4D Image Registration Method. 
+Implementation of [GroupRegNet: A Groupwise One-shot Deep Learning-based 4D Image Registration Method](https://arxiv.org/abs/2009.02613). 
 
 GroupRegNet is an unsupervised deep learning-based DIR method that employs both groupwise registration and one-shot strategy to register 4D medical images and then to determine all pairwise deformation vector fields (DVFs). 
 
