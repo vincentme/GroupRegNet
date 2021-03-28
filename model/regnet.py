@@ -81,6 +81,66 @@ class RegNet_single(nn.Module):
         res = {'disp_t2i':disp_t2i, 'scaled_disp_t2i':scaled_disp_t2i, 'warped_input_image':warped_input_image, 'template':template, 'scaled_template':scaled_template}
         return res
 
+class RegNet_pairwise(nn.Module):
+    '''
+    Pairwise CNN registration method. 
+
+    Parameters
+    ----------
+    dim : int
+        Dimension of input image.
+    depth : int, optional
+        Depth of the network. The maximum number of channels will be 2**(depth - 1) times than the initial_channels. The default is 5.
+    initial_channels : TYPE, optional
+        Number of initial channels. The default is 64.
+    normalization : TYPE, optional
+        Whether to add instance normalization after activation. The default is True.
+    '''
+    def __init__(self, dim, scale = 1, depth = 5, initial_channels = 64, normalization = True):
+        
+        super().__init__()
+        assert dim in (2, 3)
+        self.dim = dim
+        self.scale = scale
+            
+        self.unet = unet.UNet(in_channels = 2, out_channels = dim, dim = dim, depth = depth, initial_channels = initial_channels, normalization = normalization)
+        self.spatial_transform = SpatialTransformer(self.dim)
+            
+    def forward(self, fixed_image, moving_image):
+        '''
+        Parameters
+        ----------
+        fixed_image, moving_image : (h, w) or (d, h, w)
+            Fixed and moving image to be registered
+
+        Returns
+        -------
+        warped_moving_image : (h, w) or (d, h, w)
+            Warped input image. 
+        disp : (2, h, w) or (3, d, h, w)
+            Flow field from fixed image to moving image. 
+        scaled_disp
+        '''
+
+        original_image_shape = fixed_image.shape
+        input_image = torch.unsqueeze(torch.stack((fixed_image, moving_image), dim = 0), 0) # (1, 2, h, w) or (1, 2, d, h, w)
+
+        if self.scale < 1:
+            scaled_image = F.interpolate(input_image, scale_factor = self.scale, align_corners = True, mode = 'bilinear' if self.dim == 2 else 'trilinear', recompute_scale_factor = False) # (1, 2, h, w) or (1, 2, d, h, w)
+        else:
+            scaled_image = input_image
+
+        scaled_image_shape = scaled_image.shape[2:]
+        scaled_disp = torch.squeeze(self.unet(scaled_image), 0).reshape(self.dim, *scaled_image_shape) # (2, h, w) or (3, d, h, w)
+        if self.scale < 1:
+            disp = torch.nn.functional.interpolate(torch.unsqueeze(scaled_disp, 0), size = original_image_shape, mode = 'bilinear' if self.dim == 2 else 'trilinear', align_corners = True)
+        else:
+            disp = torch.unsqueeze(scaled_disp, 0)
+        
+        warped_moving_image = self.spatial_transform(input_image[:, 1:], disp).squeeze() # (h, w) or (d, h, w)
+
+        res = {'disp':disp.squeeze(0), 'scaled_disp':scaled_disp.squeeze(0), 'warped_moving_image':warped_moving_image}
+        return res
     
 class SpatialTransformer(nn.Module):
     # 2D or 3d spatial transformer network to calculate the warped moving image
