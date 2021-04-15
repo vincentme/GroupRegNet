@@ -61,7 +61,7 @@ pixel_spacing = np.array([0.97, 0.97, 2.5], dtype = np.float32)
 
 
 data_folder = f'/data/dirlab/Case{case}Pack/Image_MHD/'
-landmark_file = f'/data/dirlab/DIR-QA/Dense Sets of Landmark Pairs/case{case}_00_50.pt'
+landmark_file = f'/data/dirlab/Case1Pack/ExtremePhases/case{case}_00_50.pt'
 states_folder = '/result/general_reg/dirlab/'
 config = dict(
 dim = 3, # dimension of the input image
