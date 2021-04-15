@@ -10,9 +10,11 @@ GroupRegNet is an unsupervised deep learning-based DIR method that employs both 
 - SimpleITK: read mhd files
 - logging and tqdm
 
-## Required Data
+## Usage
 
 To evaluate GroupRegNet with `registration_dirlab.py`, the [DIR-Lab](https://www.dir-lab.com/index.html) dataset is required. The original data needs to be converted into mhd format. 
+
+To convert the original landmark of Landmark300 and LandmarkDense, run `convert_landmark_dirlab300.py` and `convert_landmark_dense.py`. 
 
 ## Overall structure
 
